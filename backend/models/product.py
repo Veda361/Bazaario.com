@@ -6,10 +6,12 @@ class Product(Base):
     __tablename__ = "products"
     
     id = Column(Integer, primary_key=True, index=True)
+    image_url = Column(String, nullable=True)
     title = Column(String)
     description = Column(String)
     price = Column(Float)
     stock = Column(Integer)
     seller_id = Column(Integer, ForeignKey("users.id"))
-    
+    category = Column(String, nullable=False)
+    subcategory = Column(String, nullable=True)
     

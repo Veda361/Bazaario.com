@@ -38,57 +38,58 @@ const categoriesData = [
   },
 ];
 
-const CategorySidebar = () => {
+const CategorySidebar = ({ onClose }) => {
   const [openCategory, setOpenCategory] = useState(null);
+  const navigate = useNavigate();
 
   const toggleCategory = (name) => {
     setOpenCategory(openCategory === name ? null : name);
   };
-  const navigate = useNavigate();
+
+  const handleNavigate = (category, subcategory) => {
+    navigate(`/products/${category}/${subcategory}`);
+    if (onClose) onClose(); // close sidebar if passed
+  };
 
   return (
-    <div className="w-72 h-screen bg-[#0F172A] text-white shadow-xl border-r border-gray-800 p-6 overflow-y-auto">
-      <h2 className="text-2xl font-bold mb-8 tracking-wide">Categories</h2>
+    <div className="w-72 h-screen bg-[#0F172A] text-white p-6">
+      <h2 className="text-2xl font-bold mb-6">Categories</h2>
 
-      <div className="space-y-4">
-        {categoriesData.map((category) => (
-          <div key={category.name}>
-            {/* Main Category */}
-            <div
-              onClick={() => toggleCategory(category.name)}
-              className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-[#1E293B] transition-all duration-300 group"
-            >
-              <div className="flex items-center gap-3 text-gray-300 group-hover:text-yellow-400 transition">
-                <span className="text-lg">{category.icon}</span>
-                <span className="font-medium">{category.name}</span>
-              </div>
-
-              {openCategory === category.name ? (
-                <FaChevronDown className="text-sm text-gray-400" />
-              ) : (
-                <FaChevronRight className="text-sm text-gray-400" />
-              )}
+      {categoriesData.map((category) => (
+        <div key={category.name}>
+          <div
+            onClick={() => toggleCategory(category.name)}
+            className="flex justify-between items-center p-3 hover:bg-[#1E293B] cursor-pointer rounded"
+          >
+            <div className="flex items-center gap-3">
+              {category.icon}
+              {category.name}
             </div>
 
-            {/* Subcategories */}
-            {openCategory === category.name && (
-              <div className="ml-10 mt-2 space-y-2">
-                {category.subcategories.map((sub) => (
-                  <div
-                    key={sub}
-                    onClick={() =>
-                      navigate(`/products/${category.name}/${sub}`)
-                    }
-                    className="text-sm text-gray-400 hover:text-yellow-400 cursor-pointer transition"
-                  >
-                    {sub}
-                  </div>
-                ))}
-              </div>
+            {openCategory === category.name ? (
+              <FaChevronDown />
+            ) : (
+              <FaChevronRight />
             )}
           </div>
-        ))}
-      </div>
+
+          {openCategory === category.name && (
+            <div className="ml-6 mt-2 space-y-2">
+              {category.subcategories.map((sub) => (
+                <div
+                  key={sub}
+                  onClick={() =>
+                    handleNavigate(category.name, sub)
+                  }
+                  className="cursor-pointer text-gray-400 hover:text-yellow-400 transition"
+                >
+                  {sub}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };

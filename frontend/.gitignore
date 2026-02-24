@@ -26,4 +26,6 @@ yarn-debug.log*
 # OS
 .DS_Store
 
-backend/serviceAccountKey.json
+
+backend/firebase_credentials.json
+.env

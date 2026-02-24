@@ -1,25 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { FaShoppingCart, FaBars } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import Logo from "../assets/logo.svg";
 import CategorySidebar from "./CategorySidebar";
 import { useCart } from "../context/CartContext";
 import CartDrawer from "./CartDrawer";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import { useWishlist } from "../context/WishlistContext";
 
 const Navbar = () => {
+  const { darkMode, toggleTheme } = useTheme(); // ✅ MOVE HERE
+  
+
   const [user, setUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { wishlist } = useWishlist();
   const { cart } = useCart();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-
   const { role } = useAuth();
-  console.log("ROLE:", role);
+
+  const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -34,13 +39,11 @@ const Navbar = () => {
 
   return (
     <>
-      {/* ================= NAVBAR ================= */}
       <nav className="bg-black shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
-            {/* LEFT SECTION */}
+            {/* LEFT */}
             <div className="flex items-center gap-4">
-              {/* ALL BUTTON */}
               {role === "admin" && (
                 <Link to="/admin">
                   <button className="bg-yellow-400 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition">
@@ -64,7 +67,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* SEARCH BAR */}
+            {/* SEARCH */}
             <div className="flex-1 mx-6 hidden md:flex">
               <input
                 type="text"
@@ -81,23 +84,37 @@ const Navbar = () => {
               />
             </div>
 
-            {/* RIGHT SECTION */}
+            {/* RIGHT */}
             <div className="flex items-center space-x-6 text-white">
-              {/* CART ICON */}
+              {/* ❤️ WISHLIST */}
+              <Link
+                to="/wishlist"
+                className="relative hover:text-red-400 transition"
+              >
+                <span className="text-xl">❤️</span>
+
+                {/* Wishlist Count */}
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {wishlist.length}
+                  </span>
+                )}
+              </Link>
+
+              {/* 🛒 CART */}
               <div
                 onClick={() => setIsCartOpen(true)}
                 className="relative cursor-pointer hover:text-yellow-400 transition"
               >
                 <FaShoppingCart className="text-xl" />
-
-                {cart.length > 0 && (
-                  <span className="absolute -top-2 -right-3 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full animate-bounce">
-                    {cart.length}
+                {totalQuantity > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                    {totalQuantity}
                   </span>
                 )}
               </div>
 
-              {/* AUTH SECTION */}
+              {/* AUTH */}
               {user ? (
                 <>
                   <span className="text-sm hidden md:block">
@@ -109,6 +126,13 @@ const Navbar = () => {
                     className="px-4 py-2 rounded-full bg-red-500 text-white font-semibold hover:bg-red-600 transition"
                   >
                     Logout
+                  </button>
+
+                  <button
+                    onClick={toggleTheme}
+                    className="px-3 py-2 bg-yellow-400 rounded-lg hover:bg-yellow-600 transition"
+                  >
+                    {darkMode ? "☀️" : "🌙"}
                   </button>
                 </>
               ) : (
@@ -133,7 +157,6 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* ================= SIDEBAR OVERLAY ================= */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40"
@@ -141,7 +164,6 @@ const Navbar = () => {
         />
       )}
 
-      {/* ================= SIDEBAR DRAWER ================= */}
       <div
         className={`fixed top-0 left-0 h-full z-50 transform transition-transform duration-300 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -150,7 +172,6 @@ const Navbar = () => {
         <CategorySidebar />
       </div>
 
-      {/* ================= CART DRAWER ================= */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );

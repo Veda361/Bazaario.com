@@ -19,18 +19,20 @@ const CartDrawer = ({ isOpen, onClose }) => {
       )}
 
       <div
-        className={`fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-full w-96 bg-white dark:bg-gray-900 shadow-2xl z-50 transition-all duration-500 ease-in-out ${
+          isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
         }`}
       >
         <div className="p-6 flex justify-between items-center border-b">
-          <h2 className="text-xl font-bold">Your Cart</h2>
+          <h2 className="text-xl font-bold tracking-wide">🛒 Shopping Cart</h2>
           <FaTimes className="cursor-pointer text-gray-600" onClick={onClose} />
         </div>
 
         <div className="p-6 space-y-6 overflow-y-auto h-[70%]">
           {cart.length === 0 ? (
-            <p className="text-gray-500">Cart is empty</p>
+            <p className="text-center text-gray-500 mt-20">
+              🛍 Your cart feels lonely... Start shopping!
+            </p>
           ) : (
             cart.map((item) => (
               <div
@@ -38,19 +40,17 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 className="flex items-center gap-4 border-b pb-4"
               >
                 <img
-                  src={item.image}
+                  src={item.image_url}
                   alt={item.title}
                   className="w-16 h-16 object-contain"
                 />
 
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold">{item.title}</h3>
-
                   <p className="text-sm text-gray-600">
                     ₹{item.price.toLocaleString()}
                   </p>
 
-                  {/* 🔥 Quantity Controls */}
                   <div className="flex items-center gap-3 mt-2">
                     <button
                       onClick={() => decreaseQty(item.id)}
@@ -58,9 +58,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     >
                       -
                     </button>
-
                     <span>{item.quantity}</span>
-
                     <button
                       onClick={() => increaseQty(item.id)}
                       className="px-2 bg-gray-200 rounded"
@@ -88,7 +86,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           </div>
           <button
             onClick={() => {
-              onClose(); // close drawer
+              onClose();
               navigate("/checkout");
             }}
             className="w-full bg-yellow-400 text-black py-3 rounded-lg hover:bg-yellow-500 transition"

@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import Optional
+from typing import List
 
 
 class ProductBase(BaseModel):
@@ -17,4 +19,19 @@ class ProductOut(ProductBase):
     seller_id: int
 
     class Config:
-        from_attributes = True
+        from_attributes = True   # for SQLAlchemy
+
+
+class ProductUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    stock: Optional[int] = None
+    
+    
+class PaginatedProducts(BaseModel):
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+    items: List[ProductOut]

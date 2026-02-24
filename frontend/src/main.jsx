@@ -6,13 +6,20 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 // 🔥 IMPORT THIS
 import { CartProvider } from "./context/CartContext";
-import { OrderProvider } from "./context/OrderContext";
+import { WishlistProvider } from "./context/WishlistContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { Toaster } from "react-hot-toast";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <CartProvider>
       <AuthProvider>
-        <App />
+     <ThemeProvider>
+    <WishlistProvider>
+      <App />
+      <Toaster position="top-right" />
+    </WishlistProvider>
+  </ThemeProvider>
       </AuthProvider>
     </CartProvider>
   </BrowserRouter>,

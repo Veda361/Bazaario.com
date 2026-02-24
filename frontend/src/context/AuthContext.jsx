@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
 
         const data = await response.json();
         setRole(data.role);
+        console.log("Protected response:", data);
       } else {
         setUser(null);
         setRole(null);
