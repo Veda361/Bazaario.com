@@ -1,0 +1,18 @@
+# Environment files
+.env
+backend/.env
+
+# Firebase credentials
+backend/firebase_credentials.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+bazaar/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
