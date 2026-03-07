@@ -30,3 +30,4 @@ yarn-debug.log*
 backend/firebase_credentials.json
 .env
 
+backend/bazario-72c6f-firebase-adminsdk-fbsvc-d1f864ccc5.json
