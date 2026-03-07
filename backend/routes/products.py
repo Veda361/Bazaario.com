@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from models.product import Product
-from dependencies.auth import get_current_user
+from firebase_admin_setup import get_current_user, admin_required
 from schemas.product import ProductOut, ProductUpdate
 from database import get_db
 import cloudinary.uploader
@@ -20,11 +20,11 @@ async def create_product(
     description: str = Form(...),
     price: float = Form(...),
     stock: int = Form(...),
-    category: str = Form(...),        # ✅ NEW
+    category: str = Form(...),  # ✅ NEW
     subcategory: str = Form(None),
     image: UploadFile = File(None),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_user),
 ):
     if user.role not in ["admin", "seller"]:
         raise HTTPException(status_code=403, detail="Not allowed")
@@ -34,8 +34,7 @@ async def create_product(
     # 🔥 Upload to Cloudinary
     if image:
         upload_result = cloudinary.uploader.upload(
-            image.file,
-            folder="bazaario/products"
+            image.file, folder="bazaario/products"
         )
         image_url = upload_result.get("secure_url")
 
@@ -44,10 +43,10 @@ async def create_product(
         description=description,
         price=price,
         stock=stock,
-        category=category,           # ✅ SAVE
-        subcategory=subcategory, # ✅ SAVE
+        category=category,  # ✅ SAVE
+        subcategory=subcategory,  # ✅ SAVE
         seller_id=user.id,
-        image_url=image_url
+        image_url=image_url,
     )
 
     db.add(product)
@@ -63,8 +62,8 @@ async def create_product(
 @router.get("/")
 def get_products(
     search: str | None = Query(None),
-    category: str | None = Query(None),       # ✅ NEW
-    subcategory: str | None = Query(None),    # ✅ NEW
+    category: str | None = Query(None),  # ✅ NEW
+    subcategory: str | None = Query(None),  # ✅ NEW
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),
     in_stock: bool | None = Query(None),
@@ -82,7 +81,7 @@ def get_products(
         query = query.filter(
             or_(
                 Product.title.ilike(f"%{search}%"),
-                Product.description.ilike(f"%{search}%")
+                Product.description.ilike(f"%{search}%"),
             )
         )
 
@@ -108,9 +107,7 @@ def get_products(
 
     # 🔄 Sorting
     sort_column = getattr(Product, sort_by)
-    query = query.order_by(
-        sort_column.desc() if order == "desc" else sort_column.asc()
-    )
+    query = query.order_by(sort_column.desc() if order == "desc" else sort_column.asc())
 
     # 📄 Pagination
     total = query.count()
@@ -151,11 +148,11 @@ async def update_product(
     description: str = Form(...),
     price: float = Form(...),
     stock: int = Form(...),
-    category: str = Form(...),          # ✅ NEW
-    subcategory: str = Form(None),      # ✅ NEW
+    category: str = Form(...),  # ✅ NEW
+    subcategory: str = Form(None),  # ✅ NEW
     image: UploadFile = File(None),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_user),
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
 
@@ -169,13 +166,12 @@ async def update_product(
     product.description = description
     product.price = price
     product.stock = stock
-    product.category = category           # ✅ UPDATE
-    product.subcategory = subcategory     # ✅ UPDATE
+    product.category = category  # ✅ UPDATE
+    product.subcategory = subcategory  # ✅ UPDATE
 
     if image:
         upload_result = cloudinary.uploader.upload(
-            image.file,
-            folder="bazaario/products"
+            image.file, folder="bazaario/products"
         )
         product.image_url = upload_result.get("secure_url")
 
@@ -184,14 +180,13 @@ async def update_product(
 
     return product
 
+
 # =========================
 # DELETE PRODUCT
 # =========================
 @router.delete("/{product_id}")
 def delete_product(
-    product_id: int,
-    db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    product_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
 
@@ -205,3 +200,14 @@ def delete_product(
     db.commit()
 
     return {"detail": "Product deleted"}
+
+
+@router.get("/admin/resale-products")
+def get_resale_products(
+    db: Session = Depends(get_db), current_user: dict = Depends(admin_required)
+):
+    from models.resale_product import ResaleProduct
+
+    products = db.query(ResaleProduct).order_by(ResaleProduct.id.desc()).all()
+
+    return products

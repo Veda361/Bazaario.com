@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from database import Base
 
 
@@ -9,3 +9,4 @@ class User(Base):
     firebase_uid = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     role = Column(String, default="buyer")
+    is_admin = Column(Boolean, default=False)
