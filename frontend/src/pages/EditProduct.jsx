@@ -28,7 +28,7 @@ const EditProduct = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const data = await apiRequest(`/products/${productId}`);
+        const data = await apiRequest(`/products/${id}`);
 
         setTitle(data.title);
         setDescription(data.description);
@@ -43,7 +43,7 @@ const EditProduct = () => {
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [id]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -80,7 +80,7 @@ const EditProduct = () => {
         formData.append("image", imageFile);
       }
 
-      await apiRequest(`/products/${productId}`, {
+      await apiRequest(`/products/${id}`, {
         method: "PUT",
         body: formData,
       });

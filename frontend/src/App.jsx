@@ -3,23 +3,48 @@ import { AnimatePresence } from "framer-motion";
 
 import Navbar from "./components/Navbar";
 import AdminRoute from "./components/AdminRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-// User Pages
+// ================= USER PAGES =================
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import SearchResults from "./pages/SearchResults";
 import Checkout from "./pages/Checkout";
 import OrderHistory from "./pages/OrderHistory";
+import OrderDetails from "./pages/OrderDetails";
 import Wishlist from "./pages/Wishlist";
+import Profile from "./pages/Profile";
 
-// Admin Pages
+// ================= TOAST =================
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// ================= ADMIN LAYOUT =================
+import AdminLayout from "./pages/AdminLayout";
+
+// ================= ADMIN PAGES =================
 import AdminDashboard from "./pages/AdminDashboard";
 import AddProduct from "./pages/AddProduct";
 import ManageProducts from "./pages/ManageProducts";
 import EditProduct from "./pages/EditProduct";
+import AdminManageOrders from "./pages/AdminManageOrders";
+import AdminRefundRequests from "./pages/AdminRefundRequests";
+import AdminRefundHistory from "./pages/AdminRefundHistory";
+
+// ================= RESALE =================
+import SellItem from "./pages/SellItem";
+import ResaleProducts from "./pages/ResaleProducts";
+import AdminResaleRequests from "./pages/AdminResaleRequests";
+import ManageResaleProducts from "./pages/ManageResaleProducts";
+
+// ================= UTIL =================
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   const location = useLocation();
@@ -28,60 +53,127 @@ function App() {
     <>
       <Navbar />
 
-      {/* 🔥 Animated Route Transitions */}
+      {/* ================= GLOBAL TOAST SYSTEM ================= */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="dark"
+      />
+
+      {/* ================= ROUTES ================= */}
       <AnimatePresence mode="wait">
+        <ScrollToTop />
         <Routes location={location} key={location.pathname}>
-          
-          {/* ================= USER ROUTES ================= */}
+
+          {/* ================= PUBLIC ROUTES ================= */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+
+          {/* Password Reset System */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
           <Route
             path="/products/:category/:subcategory"
             element={<Products />}
           />
+
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/search" element={<SearchResults />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/resale" element={<ResaleProducts />} />
+
+          {/* ================= PROTECTED USER ROUTES ================= */}
+
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <OrderHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/orders/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute>
+                <Wishlist />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/sell"
+            element={
+              <ProtectedRoute>
+                <SellItem />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ================= ADMIN ROUTES ================= */}
+
           <Route
             path="/admin"
             element={
               <AdminRoute>
-                <AdminDashboard />
+                <AdminLayout />
               </AdminRoute>
             }
-          />
+          >
+            {/* Dashboard */}
+            <Route index element={<AdminDashboard />} />
 
-          <Route
-            path="/admin/add-product"
-            element={
-              <AdminRoute>
-                <AddProduct />
-              </AdminRoute>
-            }
-          />
+            {/* Orders */}
+            <Route path="orders" element={<AdminManageOrders />} />
 
-          <Route
-            path="/admin/manage-products"
-            element={
-              <AdminRoute>
-                <ManageProducts />
-              </AdminRoute>
-            }
-          />
+            {/* Refund Control */}
+            <Route path="refunds" element={<AdminRefundRequests />} />
+            <Route path="refund-history" element={<AdminRefundHistory />} />
 
-          <Route
-            path="/admin/edit-product/:id"
-            element={
-              <AdminRoute>
-                <EditProduct />
-              </AdminRoute>
-            }
-          />
+            {/* Product Control */}
+            <Route path="add-product" element={<AddProduct />} />
+            <Route path="manage-products" element={<ManageProducts />} />
+            <Route path="edit-product/:id" element={<EditProduct />} />
+
+            {/* Resale Control */}
+            <Route path="resale-requests" element={<AdminResaleRequests />} />
+            <Route path="resale-products" element={<ManageResaleProducts />} />
+          </Route>
+
         </Routes>
       </AnimatePresence>
     </>
