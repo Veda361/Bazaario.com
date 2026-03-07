@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from models.product import Product
-from firebase_admin_setup import get_current_user, admin_required
+from dependencies.auth import get_current_user, admin_required
 from schemas.product import ProductOut, ProductUpdate
 from database import get_db
 import cloudinary.uploader
