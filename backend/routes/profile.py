@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.order import Order
 from models.payment import Payment
-from firebase_admin_setup import get_current_user
+from dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
 

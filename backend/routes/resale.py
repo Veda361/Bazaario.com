@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from database import get_db
 from models.resale_product import ResaleProduct
-from firebase_admin_setup import get_current_user, admin_required
+from dependencies.auth import get_current_user, admin_required
 import cloudinary.uploader
 
 router = APIRouter(tags=["Resale"])
