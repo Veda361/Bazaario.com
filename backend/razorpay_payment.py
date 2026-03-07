@@ -14,7 +14,7 @@ from fastapi import Query
 from database import SessionLocal
 from models.order import Order
 from models.payment import Payment
-from firebase_admin_setup import admin_required, get_current_user   # ✅ Auth required
+from dependencies.auth import admin_required, get_current_user   # ✅ Auth required
 from datetime import datetime, date
 from fastapi.responses import StreamingResponse
 from models.user import User
