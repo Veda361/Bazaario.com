@@ -4,7 +4,7 @@ import base64
 import firebase_admin
 from firebase_admin import credentials, auth
 
-firebase_base64 = os.getenv("FIREBASE_CREDENTIALS_BASE64")
+firebase_base64 = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 
 if firebase_base64:
     firebase_json = base64.b64decode(firebase_base64).decode("utf-8")
