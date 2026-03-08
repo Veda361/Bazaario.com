@@ -84,15 +84,15 @@ class RefundRequest(BaseModel):
 def create_payment(
     data: OrderRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
 
-    user_id = current_user["id"]
-    user_email = current_user["email"]
+    user_id = current_user.id
+    user_email = current_user.email
 
     try:
 
-        # ---------------- NORMAL CART ----------------
+        # ---------------- CART ORDER ----------------
         if data.cart:
 
             razorpay_order = razorpay_client.order.create({
@@ -114,7 +114,7 @@ def create_payment(
             db.commit()
             db.refresh(new_order)
 
-            payment = Payment(
+            new_payment = Payment(
                 order_id=new_order.id,
                 user_id=user_id,
                 amount=data.amount / 100,
@@ -122,12 +122,13 @@ def create_payment(
                 payment_method="Razorpay"
             )
 
-            db.add(payment)
+            db.add(new_payment)
             db.commit()
 
             return razorpay_order
-        
-# ---------------- RESALE PRODUCT ----------------
+
+
+# ---------------- RESALE ORDER ----------------
         if data.resale_product_id:
 
             resale_item = db.query(ResaleProduct).filter(
@@ -162,7 +163,7 @@ def create_payment(
             db.commit()
             db.refresh(new_order)
 
-            payment = Payment(
+            new_payment = Payment(
                 order_id=new_order.id,
                 user_id=user_id,
                 amount=resale_item.admin_price,
@@ -170,20 +171,16 @@ def create_payment(
                 payment_method="Razorpay"
             )
 
-            db.add(payment)
+            db.add(new_payment)
             db.commit()
 
             return razorpay_order
 
         raise HTTPException(status_code=400, detail="Invalid order request")
 
-    except razorpay.errors.BadRequestError as e:
-        raise HTTPException(status_code=400, detail=f"Razorpay error: {str(e)}")
-
     except Exception as e:
         print("🔥 CREATE ORDER ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
-    
     
 # ============================================================
 # VERIFY PAYMENT
@@ -195,7 +192,7 @@ def verify_payment(
     current_user: dict = Depends(get_current_user)
 ):
 
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     # 🔑 Generate Razorpay signature
     order_payment = f"{data.razorpay_order_id}|{data.razorpay_payment_id}"
@@ -279,7 +276,7 @@ def payment_failed(
 
     order = db.query(Order).filter(
         Order.razorpay_order_id == data.razorpay_order_id,
-        Order.user_id == current_user["id"]
+        Order.user_id == current_user.id
     ).first()
 
     if not order:
@@ -312,7 +309,7 @@ def retry_payment(
 
     order = db.query(Order).filter(
         Order.razorpay_order_id == razorpay_order_id,
-        Order.user_id == current_user["id"]
+        Order.user_id == current_user.id
     ).first()
 
     if not order:
@@ -554,7 +551,7 @@ def get_order_details(
 ):
     order = db.query(Order).filter(
         Order.id == order_id,
-        Order.user_id == current_user["id"]
+        Order.user_id == current_user.id
     ).first()
 
     if not order:
@@ -624,7 +621,7 @@ def get_order_details(
 ):
     order = db.query(Order).filter(
         Order.id == order_id,
-        Order.user_id == current_user["id"]
+        Order.user_id == current_user.id
     ).first()
 
     if not order:
@@ -685,7 +682,7 @@ def cancel_and_refund(
 ):
     order = db.query(Order).filter(
         Order.id == order_id,
-        Order.user_id == current_user["id"]
+        Order.user_id == current_user.id
     ).first()
 
     if not order:
@@ -747,7 +744,7 @@ def request_refund(
 ):
     order = db.query(Order).filter(
         Order.id == order_id,
-        Order.user_id == current_user["id"]
+        Order.user_id == current_user.id
     ).first()
 
     if not order:
