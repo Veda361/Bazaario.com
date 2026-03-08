@@ -20,7 +20,7 @@ async def create_product(
     description: str = Form(...),
     price: float = Form(...),
     stock: int = Form(...),
-    category: str = Form(...),  # ✅ NEW
+    category: str = Form(...),
     subcategory: str = Form(None),
     image: UploadFile = File(None),
     db: Session = Depends(get_db),
@@ -31,7 +31,6 @@ async def create_product(
 
     image_url = None
 
-    # 🔥 Upload to Cloudinary
     if image:
         upload_result = cloudinary.uploader.upload(
             image.file, folder="bazaario/products"
@@ -43,8 +42,8 @@ async def create_product(
         description=description,
         price=price,
         stock=stock,
-        category=category,  # ✅ SAVE
-        subcategory=subcategory,  # ✅ SAVE
+        category=category,
+        subcategory=subcategory,
         seller_id=user.id,
         image_url=image_url,
     )
@@ -62,8 +61,8 @@ async def create_product(
 @router.get("/")
 def get_products(
     search: str | None = Query(None),
-    category: str | None = Query(None),  # ✅ NEW
-    subcategory: str | None = Query(None),  # ✅ NEW
+    category: str | None = Query(None),
+    subcategory: str | None = Query(None),
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),
     in_stock: bool | None = Query(None),
@@ -76,7 +75,6 @@ def get_products(
 ):
     query = db.query(Product)
 
-    # 🔎 Search
     if search:
         query = query.filter(
             or_(
@@ -85,14 +83,12 @@ def get_products(
             )
         )
 
-    # ✅ CATEGORY FILTER
     if category:
         query = query.filter(Product.category == category)
 
     if subcategory:
         query = query.filter(Product.subcategory == subcategory)
 
-    # 🔎 Other Filters
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
 
@@ -105,11 +101,11 @@ def get_products(
     if min_stock is not None:
         query = query.filter(Product.stock >= min_stock)
 
-    # 🔄 Sorting
     sort_column = getattr(Product, sort_by)
-    query = query.order_by(sort_column.desc() if order == "desc" else sort_column.asc())
+    query = query.order_by(
+        sort_column.desc() if order == "desc" else sort_column.asc()
+    )
 
-    # 📄 Pagination
     total = query.count()
     offset = (page - 1) * limit
     products = query.offset(offset).limit(limit).all()
@@ -126,6 +122,23 @@ def get_products(
 
 
 # =========================
+# ADMIN – GET RESALE PRODUCTS
+# =========================
+@router.get("/admin/resale-products")
+def get_resale_products(
+    db: Session = Depends(get_db),
+    current_user=Depends(admin_required)
+):
+    from models.resale_product import ResaleProduct
+
+    products = db.query(ResaleProduct)\
+        .order_by(ResaleProduct.id.desc())\
+        .all()
+
+    return products
+
+
+# =========================
 # GET PRODUCT BY ID
 # =========================
 @router.get("/{product_id}", response_model=ProductOut)
@@ -139,7 +152,7 @@ def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
 
 
 # =========================
-# UPDATE PRODUCT (OPTIONAL IMAGE UPDATE)
+# UPDATE PRODUCT
 # =========================
 @router.put("/{product_id}", response_model=ProductOut)
 async def update_product(
@@ -148,8 +161,8 @@ async def update_product(
     description: str = Form(...),
     price: float = Form(...),
     stock: int = Form(...),
-    category: str = Form(...),  # ✅ NEW
-    subcategory: str = Form(None),  # ✅ NEW
+    category: str = Form(...),
+    subcategory: str = Form(None),
     image: UploadFile = File(None),
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
@@ -166,8 +179,8 @@ async def update_product(
     product.description = description
     product.price = price
     product.stock = stock
-    product.category = category  # ✅ UPDATE
-    product.subcategory = subcategory  # ✅ UPDATE
+    product.category = category
+    product.subcategory = subcategory
 
     if image:
         upload_result = cloudinary.uploader.upload(
@@ -186,7 +199,9 @@ async def update_product(
 # =========================
 @router.delete("/{product_id}")
 def delete_product(
-    product_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)
+    product_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
 
@@ -200,14 +215,3 @@ def delete_product(
     db.commit()
 
     return {"detail": "Product deleted"}
-
-
-@router.get("/admin/resale-products")
-def get_resale_products(
-    db: Session = Depends(get_db), current_user: dict = Depends(admin_required)
-):
-    from models.resale_product import ResaleProduct
-
-    products = db.query(ResaleProduct).order_by(ResaleProduct.id.desc()).all()
-
-    return products

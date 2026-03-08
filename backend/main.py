@@ -27,8 +27,9 @@ def startup():
 def root():
     return {"message": "Bazaario API is running 🚀"}
 
+# ROUTES
 app.include_router(razorpay_router, prefix="/api/payment")
-app.include_router(products.router, prefix="/products")
-app.include_router(profile.router)
+app.include_router(products.router, prefix="/api/products")
+app.include_router(profile.router, prefix="/api/profile")
 app.include_router(resale.router, prefix="/api/resale")
-app.include_router(reviews.router)
+app.include_router(reviews.router, prefix="/api/reviews")

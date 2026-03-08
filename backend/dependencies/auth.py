@@ -31,15 +31,18 @@ def get_current_user(
     try:
         decoded = verify_token(token)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    firebase_uid = decoded["uid"]
+    firebase_uid = decoded.get("uid")
     email = decoded.get("email")
+
+    if not firebase_uid:
+        raise HTTPException(status_code=401, detail="Invalid Firebase token")
 
     user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
     if not user:
-        is_admin = email in ADMIN_EMAILS
+        is_admin = email in ADMIN_EMAILS if email else False
 
         user = User(
             firebase_uid=firebase_uid,

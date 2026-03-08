@@ -1,6 +1,6 @@
 import { auth } from "./firebase";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://bazaario-com.onrender.com";
 
 export async function apiRequest(endpoint, options = {}) {
   let headers = { ...options.headers };

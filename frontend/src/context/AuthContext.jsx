@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
+import { apiRequest } from "../api";
 
 const AuthContext = createContext();
 
@@ -14,17 +15,23 @@ export const AuthProvider = ({ children }) => {
       if (firebaseUser) {
         setUser(firebaseUser);
 
-        const token = await firebaseUser.getIdToken();
+        try {
+          const data = await apiRequest("/api/profile/dashboard");
 
-        const response = await fetch("http://localhost:8000/protected", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+          // Backend may not always return role
+          if (data && data.role) {
+            setRole(data.role);
+          } else {
+            setRole("buyer");
+          }
 
-        const data = await response.json();
-        setRole(data.role);
-        console.log("Protected response:", data);
+          console.log("Profile response:", data);
+
+        } catch (err) {
+          console.error("Auth API error:", err);
+          setRole("buyer");
+        }
+
       } else {
         setUser(null);
         setRole(null);
