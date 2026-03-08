@@ -7,6 +7,7 @@ from schemas.product import ProductOut, ProductUpdate
 from database import get_db
 import cloudinary.uploader
 import math
+from cloudinary_config import *
 
 router = APIRouter()
 
