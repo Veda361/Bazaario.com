@@ -71,7 +71,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-500 backdrop-blur-xl ${
+        className={`sticky top-0 w-full z-50 transition-all duration-500 backdrop-blur-xl ${
           scrolled
             ? "bg-black/95 border-b border-white/10 shadow-xl"
             : "bg-black/60"
@@ -245,8 +245,6 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-
-      <div className="pt-28" />
 
       {isSidebarOpen && (
         <div
