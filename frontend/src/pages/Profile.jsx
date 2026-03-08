@@ -5,6 +5,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import { toast } from "react-toastify";
+import { apiRequest } from "../api";
 
 const Profile = () => {
   const [data, setData] = useState(null);
@@ -16,14 +17,13 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      const token = await auth.currentUser.getIdToken(true);
-
-      const res = await fetch("http://localhost:8000/api/profile/dashboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const dashboardData = await res.json();
-      setData(dashboardData);
+      try {
+        const dashboardData = await apiRequest("/profile/dashboard");
+        setData(dashboardData);
+      } catch (error) {
+        console.error("Dashboard fetch failed:", error);
+        toast.error("Failed to load dashboard");
+      }
     };
 
     fetchDashboard();

@@ -7,13 +7,16 @@ from razorpay_payment import router as razorpay_router
 
 app = FastAPI()
 
+# CORS MUST be added immediately after app creation
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://bazaario-frontend.onrender.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "https://bazaario-frontend.onrender.com"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

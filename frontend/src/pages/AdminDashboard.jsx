@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
 import { motion } from "framer-motion";
+import { apiRequest } from "../api";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,24 +13,19 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
 
-      const token = await auth.currentUser.getIdToken();
-      let url = "http://localhost:8000/api/payment/admin/dashboard";
+      let endpoint = "/payment/admin/dashboard";
 
       if (startDate && endDate) {
-        url += `?start_date=${startDate}&end_date=${endDate}`;
+        endpoint += `?start_date=${startDate}&end_date=${endDate}`;
       }
 
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const result = await apiRequest(endpoint);
 
-      if (!res.ok) throw new Error("Unauthorized");
-
-      const result = await res.json();
       setData(result);
+
     } catch (error) {
       console.error(error);
-      alert("You are not authorized to access admin panel");
+      alert("Failed to load admin dashboard");
     } finally {
       setLoading(false);
     }
@@ -40,30 +33,35 @@ const AdminDashboard = () => {
 
   const handleExport = async () => {
     try {
-      const token = await auth.currentUser.getIdToken();
-      let url = "http://localhost:8000/api/payment/admin/export-payments";
+
+      let url = "https://bazaario-com.onrender.com/api/payment/admin/export-payments";
 
       if (startDate && endDate) {
         url += `?start_date=${startDate}&end_date=${endDate}`;
       }
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
+      const token = await (await import("../firebase")).auth.currentUser.getIdToken();
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      if (!response.ok) throw new Error("Export failed");
+      const blob = await res.blob();
 
-      const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = "payments.csv";
       document.body.appendChild(a);
       a.click();
       a.remove();
+
     } catch (error) {
       console.error(error);
-      alert("Failed to export CSV");
+      alert("CSV export failed");
     }
   };
 
@@ -73,16 +71,16 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-netflixBlack flex items-center justify-center">
-        <p className="text-xl text-gray-400">Loading dashboard...</p>
+      <div className="min-h-screen bg-netflixBlack flex items-center justify-center text-white">
+        Loading dashboard...
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-netflixBlack flex items-center justify-center">
-        <p className="text-xl text-gray-400">No data available</p>
+      <div className="min-h-screen bg-netflixBlack flex items-center justify-center text-white">
+        No data available
       </div>
     );
   }
@@ -91,73 +89,61 @@ const AdminDashboard = () => {
     `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
   return (
-    <div className="min-h-screen bg-netflixBlack p-12">
+    <div className="min-h-screen bg-netflixBlack p-12 text-white">
 
       <motion.h1
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-4xl font-bold mb-12"
+        className="text-4xl font-black mb-12 border-b-4 border-white pb-4"
       >
-        📊 Bazaario Analytics Dashboard
+        📊 Bazaario Admin Analytics
       </motion.h1>
 
       {/* FILTER PANEL */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-12 flex gap-6 flex-wrap">
+      <div className="border-4 border-white bg-netflixDark p-6 mb-12 shadow-[8px_8px_0px_#E50914] flex flex-wrap gap-6">
 
-        <div>
-          <label className="block text-sm mb-2 text-gray-400">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="bg-black border border-gray-700 rounded-xl px-4 py-2"
-          />
-        </div>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e)=>setStartDate(e.target.value)}
+          className="bg-black border-4 border-white px-4 py-2"
+        />
 
-        <div>
-          <label className="block text-sm mb-2 text-gray-400">
-            End Date
-          </label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="bg-black border border-gray-700 rounded-xl px-4 py-2"
-          />
-        </div>
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e)=>setEndDate(e.target.value)}
+          className="bg-black border-4 border-white px-4 py-2"
+        />
 
-        <div className="flex items-end gap-4">
-          <button
-            onClick={fetchDashboard}
-            className="bg-netflixRed px-6 py-2 rounded-xl hover:bg-red-700 shadow-glow transition"
-          >
-            Apply
-          </button>
+        <button
+          onClick={fetchDashboard}
+          className="bg-netflixRed border-4 border-white px-6 py-2 font-bold shadow-[4px_4px_0px_#000]"
+        >
+          Apply
+        </button>
 
-          <button
-            onClick={() => {
-              setStartDate("");
-              setEndDate("");
-              fetchDashboard();
-            }}
-            className="bg-white/10 px-6 py-2 rounded-xl border border-white/20 hover:bg-white/20 transition"
-          >
-            Reset
-          </button>
+        <button
+          onClick={()=>{
+            setStartDate("");
+            setEndDate("");
+            fetchDashboard();
+          }}
+          className="bg-black border-4 border-white px-6 py-2 font-bold"
+        >
+          Reset
+        </button>
 
-          <button
-            onClick={handleExport}
-            className="bg-green-600 px-6 py-2 rounded-xl hover:bg-green-700 transition"
-          >
-            Export CSV
-          </button>
-        </div>
+        <button
+          onClick={handleExport}
+          className="bg-green-600 border-4 border-white px-6 py-2 font-bold"
+        >
+          Export CSV
+        </button>
+
       </div>
 
-      {/* ANALYTICS CARDS */}
+      {/* ANALYTICS */}
       <div className="grid md:grid-cols-4 gap-8 mb-16">
 
         <StatCard title="Total Revenue" value={formatCurrency(data.total_revenue)} highlight />
@@ -170,16 +156,14 @@ const AdminDashboard = () => {
         <StatCard title="Total Orders" value={data.total_orders} />
         <StatCard title="Total Users" value={data.total_users} />
 
-        <StatCard title="Resale Listed" value={data.total_resale_listed} />
-        <StatCard title="Resale Sold" value={data.total_resale_sold} />
-
       </div>
 
       {/* TABLE */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+      <div className="border-4 border-white bg-netflixDark shadow-[8px_8px_0px_#E50914] overflow-hidden">
 
         <table className="w-full text-left">
-          <thead className="bg-white/10">
+
+          <thead className="border-b-4 border-white">
             <tr>
               <th className="p-4">ID</th>
               <th className="p-4">Amount</th>
@@ -190,11 +174,8 @@ const AdminDashboard = () => {
           </thead>
 
           <tbody>
-            {(data.latest_payments || []).map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-white/5 hover:bg-white/5 transition"
-              >
+            {(data.latest_payments || []).map((p)=>(
+              <tr key={p.id} className="border-b border-white/10">
                 <td className="p-4">{p.id}</td>
                 <td className="p-4">{formatCurrency(p.amount)}</td>
                 <td className="p-4">{p.status}</td>
@@ -205,9 +186,11 @@ const AdminDashboard = () => {
               </tr>
             ))}
           </tbody>
+
         </table>
 
       </div>
+
     </div>
   );
 };
@@ -215,14 +198,12 @@ const AdminDashboard = () => {
 const StatCard = ({ title, value, highlight }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
-    className={`bg-white/5 backdrop-blur-xl border border-white/10 
-                rounded-2xl p-6 transition
-                ${highlight ? "shadow-glow border-netflixRed" : ""}`}
+    className={`border-4 border-white p-6 bg-netflixDark shadow-[6px_6px_0px_#E50914] ${
+      highlight ? "text-netflixRed" : ""
+    }`}
   >
-    <h2 className="text-gray-400 text-sm mb-2">{title}</h2>
-    <p className={`text-2xl font-bold ${highlight ? "text-netflixRed" : ""}`}>
-      {value}
-    </p>
+    <h2 className="text-sm mb-2 uppercase">{title}</h2>
+    <p className="text-2xl font-black">{value}</p>
   </motion.div>
 );
 

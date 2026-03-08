@@ -73,11 +73,21 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-2xl bg-white shadow-2xl rounded-2xl p-10">
-        <h1 className="text-3xl font-bold mb-6">Add New Product</h1>
+    <div className="min-h-screen bg-netflixBlack px-10 py-16 text-white">
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div
+        className="max-w-3xl mx-auto
+        border-4 border-white
+        bg-netflixDark
+        p-10
+        shadow-[10px_10px_0px_#E50914]"
+      >
+
+        <h1 className="text-4xl font-black uppercase mb-10 border-b-4 border-white pb-4">
+          Add New Product
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
 
           {/* TITLE */}
           <input
@@ -85,8 +95,8 @@ const AddProduct = () => {
             value={title}
             required
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Product title"
-            className="w-full border p-3 rounded-lg"
+            placeholder="Product Title"
+            className="w-full border-4 border-white bg-black p-4 font-bold"
           />
 
           {/* DESCRIPTION */}
@@ -94,20 +104,20 @@ const AddProduct = () => {
             value={description}
             required
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
+            placeholder="Product Description"
             rows="4"
-            className="w-full border p-3 rounded-lg"
+            className="w-full border-4 border-white bg-black p-4 font-bold"
           />
 
           {/* PRICE + STOCK */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-6">
             <input
               type="number"
               value={price}
               required
               onChange={(e) => setPrice(e.target.value)}
               placeholder="Price"
-              className="border p-3 rounded-lg"
+              className="border-4 border-white bg-black p-4 font-bold"
             />
 
             <input
@@ -116,7 +126,7 @@ const AddProduct = () => {
               required
               onChange={(e) => setStock(e.target.value)}
               placeholder="Stock"
-              className="border p-3 rounded-lg"
+              className="border-4 border-white bg-black p-4 font-bold"
             />
           </div>
 
@@ -128,7 +138,7 @@ const AddProduct = () => {
               setCategory(e.target.value);
               setSubcategory("");
             }}
-            className="w-full border p-3 rounded-lg"
+            className="w-full border-4 border-white bg-black p-4 font-bold"
           >
             <option value="">Select Category</option>
             {Object.keys(categories).map((cat) => (
@@ -143,7 +153,7 @@ const AddProduct = () => {
             <select
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
-              className="w-full border p-3 rounded-lg"
+              className="w-full border-4 border-white bg-black p-4 font-bold"
             >
               <option value="">Select Subcategory</option>
               {categories[category].map((sub) => (
@@ -159,21 +169,33 @@ const AddProduct = () => {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full border p-3 rounded-lg"
+            className="w-full border-4 border-white bg-black p-4 font-bold"
           />
 
+          {/* PREVIEW */}
           {preview && (
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-full h-48 object-cover rounded-lg"
-            />
+            <div className="border-4 border-white p-4 bg-black">
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-56 object-cover"
+              />
+            </div>
           )}
 
+          {/* BUTTON */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-lg"
+            className="w-full
+            border-4 border-white
+            bg-netflixRed
+            py-4
+            uppercase
+            font-black
+            shadow-[6px_6px_0px_#000]
+            hover:bg-red-700
+            active:translate-x-2 active:translate-y-2 active:shadow-none"
           >
             {loading ? "Uploading..." : "Create Product"}
           </button>
