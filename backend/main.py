@@ -7,17 +7,15 @@ from razorpay_payment import router as razorpay_router
 
 app = FastAPI()
 
-# Allowed frontend origins
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://bazaario-frontend.onrender.com",
+    "https://bazaario-com-1.onrender.com"
 ]
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,   # ❗ must NOT be "*"
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,7 +29,6 @@ def startup():
 def root():
     return {"message": "Bazaario API is running 🚀"}
 
-# ROUTES
 app.include_router(razorpay_router, prefix="/api/payment")
 app.include_router(products.router, prefix="/api/products")
 app.include_router(profile.router, prefix="/api/profile")
