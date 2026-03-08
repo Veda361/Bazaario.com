@@ -26,8 +26,14 @@ load_dotenv()
 
 router = APIRouter()
 
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+    raise RuntimeError("❌ Razorpay keys not found in environment variables")
+
 razorpay_client = razorpay.Client(
-    auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
+    auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)
 )
 
 # ---------------------------
@@ -80,95 +86,105 @@ def create_payment(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
+
     user_id = current_user["id"]
     user_email = current_user["email"]
 
-    # 🔥 CASE 1 — Normal Amazon Cart
-    if data.cart:
-        razorpay_order = razorpay_client.order.create({
-            "amount": data.amount,
-            "currency": "INR",
-            "payment_capture": 1
-        })
+    try:
 
-        new_order = Order(
-            user_id=user_id,
-            user_email=user_email,
-            razorpay_order_id=razorpay_order["id"],
-            amount=data.amount / 100,
-            status="Pending",
-            items=data.cart
-        )
+        # ---------------- NORMAL CART ----------------
+        if data.cart:
 
-        db.add(new_order)
-        db.commit()
-        db.refresh(new_order)
+            razorpay_order = razorpay_client.order.create({
+                "amount": data.amount,
+                "currency": "INR",
+                "payment_capture": 1
+            })
 
-        new_payment = Payment(
-            order_id=new_order.id,
-            user_id=user_id,
-            amount=data.amount / 100,
-            status="Pending",
-            payment_method="Razorpay"
-        )
+            new_order = Order(
+                user_id=user_id,
+                user_email=user_email,
+                razorpay_order_id=razorpay_order["id"],
+                amount=data.amount / 100,
+                status="Pending",
+                items=data.cart
+            )
 
-        db.add(new_payment)
-        db.commit()
+            db.add(new_order)
+            db.commit()
+            db.refresh(new_order)
 
-        return razorpay_order
+            payment = Payment(
+                order_id=new_order.id,
+                user_id=user_id,
+                amount=data.amount / 100,
+                status="Pending",
+                payment_method="Razorpay"
+            )
 
-    # 🔥 CASE 2 — Resale Product Purchase
-    if data.resale_product_id:
+            db.add(payment)
+            db.commit()
 
-        from models.resale_product import ResaleProduct
+            return razorpay_order
+        
+# ---------------- RESALE PRODUCT ----------------
+        if data.resale_product_id:
 
-        resale_item = db.query(ResaleProduct).filter(
-            ResaleProduct.id == data.resale_product_id,
-            ResaleProduct.is_listed == True
-        ).first()
+            resale_item = db.query(ResaleProduct).filter(
+                ResaleProduct.id == data.resale_product_id,
+                ResaleProduct.is_listed == True
+            ).first()
 
-        if not resale_item:
-            raise HTTPException(status_code=404, detail="Resale item not available")
+            if not resale_item:
+                raise HTTPException(status_code=404, detail="Resale item not available")
 
-        razorpay_order = razorpay_client.order.create({
-            "amount": int(resale_item.admin_price * 100),
-            "currency": "INR",
-            "payment_capture": 1
-        })
+            razorpay_order = razorpay_client.order.create({
+                "amount": int(resale_item.admin_price * 100),
+                "currency": "INR",
+                "payment_capture": 1
+            })
 
-        new_order = Order(
-            user_id=user_id,
-            user_email=user_email,
-            razorpay_order_id=razorpay_order["id"],
-            amount=resale_item.admin_price,
-            status="Pending",
-            items=[{
-                "type": "resale",
-                "resale_product_id": resale_item.id,
-                "title": resale_item.title,
-                "price": resale_item.admin_price
-            }]
-        )
+            new_order = Order(
+                user_id=user_id,
+                user_email=user_email,
+                razorpay_order_id=razorpay_order["id"],
+                amount=resale_item.admin_price,
+                status="Pending",
+                items=[{
+                    "type": "resale",
+                    "resale_product_id": resale_item.id,
+                    "title": resale_item.title,
+                    "price": resale_item.admin_price
+                }]
+            )
 
-        db.add(new_order)
-        db.commit()
-        db.refresh(new_order)
+            db.add(new_order)
+            db.commit()
+            db.refresh(new_order)
 
-        new_payment = Payment(
-            order_id=new_order.id,
-            user_id=user_id,
-            amount=resale_item.admin_price,
-            status="Pending",
-            payment_method="Razorpay"
-        )
+            payment = Payment(
+                order_id=new_order.id,
+                user_id=user_id,
+                amount=resale_item.admin_price,
+                status="Pending",
+                payment_method="Razorpay"
+            )
 
-        db.add(new_payment)
-        db.commit()
+            db.add(payment)
+            db.commit()
 
-        return razorpay_order
+            return razorpay_order
 
-    raise HTTPException(status_code=400, detail="Invalid order request")
+        raise HTTPException(status_code=400, detail="Invalid order request")
 
+    except razorpay.errors.BadRequestError as e:
+        raise HTTPException(status_code=400, detail=f"Razorpay error: {str(e)}")
+
+    except Exception as e:
+        print("🔥 CREATE ORDER ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
 # ============================================================
 # VERIFY PAYMENT
 # ============================================================
