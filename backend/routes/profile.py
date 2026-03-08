@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from database import get_db
 from models.order import Order
 from models.payment import Payment
 from dependencies.auth import get_current_user
+from models.user import User
 
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
 
@@ -11,19 +13,23 @@ router = APIRouter(prefix="/api/profile", tags=["Profile"])
 @router.get("/dashboard")
 def get_dashboard(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    user_id = current_user["id"]
+    user_id = current_user.id
 
-    orders = db.query(Order)\
-        .filter(Order.user_id == user_id)\
-        .order_by(Order.id.desc())\
+    orders = (
+        db.query(Order)
+        .filter(Order.user_id == user_id)
+        .order_by(Order.id.desc())
         .all()
+    )
 
-    payments = db.query(Payment)\
-        .filter(Payment.user_id == user_id)\
-        .order_by(Payment.id.desc())\
+    payments = (
+        db.query(Payment)
+        .filter(Payment.user_id == user_id)
+        .order_by(Payment.id.desc())
         .all()
+    )
 
     total_orders = len(orders)
     paid_orders = len([o for o in orders if o.status == "Paid"])
@@ -41,7 +47,7 @@ def get_dashboard(
             "delivered_at": o.delivered_at,
             "return_deadline": o.return_deadline,
             "created_at": o.created_at,
-            "items": o.items   # 🔥 IMPORTANT (Resale detection)
+            "items": o.items
         }
         for o in orders
     ]
@@ -58,7 +64,8 @@ def get_dashboard(
 
     return {
         "user_id": user_id,
-        "email": current_user["email"],
+        "email": current_user.email,
+        "role": current_user.role,
         "stats": {
             "total_orders": total_orders,
             "paid_orders": paid_orders,
