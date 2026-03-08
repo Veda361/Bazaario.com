@@ -2,10 +2,10 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 import Navbar from "./components/Navbar";
+import TopBar from "./components/TopBar";
 import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// ================= USER PAGES =================
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -21,14 +21,11 @@ import OrderDetails from "./pages/OrderDetails";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 
-// ================= TOAST =================
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// ================= ADMIN LAYOUT =================
 import AdminLayout from "./pages/AdminLayout";
 
-// ================= ADMIN PAGES =================
 import AdminDashboard from "./pages/AdminDashboard";
 import AddProduct from "./pages/AddProduct";
 import ManageProducts from "./pages/ManageProducts";
@@ -37,13 +34,11 @@ import AdminManageOrders from "./pages/AdminManageOrders";
 import AdminRefundRequests from "./pages/AdminRefundRequests";
 import AdminRefundHistory from "./pages/AdminRefundHistory";
 
-// ================= RESALE =================
 import SellItem from "./pages/SellItem";
 import ResaleProducts from "./pages/ResaleProducts";
 import AdminResaleRequests from "./pages/AdminResaleRequests";
 import ManageResaleProducts from "./pages/ManageResaleProducts";
 
-// ================= UTIL =================
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
@@ -51,31 +46,23 @@ function App() {
 
   return (
     <>
+      <TopBar />
       <Navbar />
 
-      {/* ================= GLOBAL TOAST SYSTEM ================= */}
       <ToastContainer
         position="bottom-right"
         autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        draggable
         theme="dark"
       />
 
-      {/* ================= ROUTES ================= */}
       <AnimatePresence mode="wait">
         <ScrollToTop />
         <Routes location={location} key={location.pathname}>
 
-          {/* ================= PUBLIC ROUTES ================= */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Password Reset System */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -87,8 +74,6 @@ function App() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/resale" element={<ResaleProducts />} />
-
-          {/* ================= PROTECTED USER ROUTES ================= */}
 
           <Route
             path="/checkout"
@@ -144,8 +129,6 @@ function App() {
             }
           />
 
-          {/* ================= ADMIN ROUTES ================= */}
-
           <Route
             path="/admin"
             element={
@@ -154,22 +137,13 @@ function App() {
               </AdminRoute>
             }
           >
-            {/* Dashboard */}
             <Route index element={<AdminDashboard />} />
-
-            {/* Orders */}
             <Route path="orders" element={<AdminManageOrders />} />
-
-            {/* Refund Control */}
             <Route path="refunds" element={<AdminRefundRequests />} />
             <Route path="refund-history" element={<AdminRefundHistory />} />
-
-            {/* Product Control */}
             <Route path="add-product" element={<AddProduct />} />
             <Route path="manage-products" element={<ManageProducts />} />
             <Route path="edit-product/:id" element={<EditProduct />} />
-
-            {/* Resale Control */}
             <Route path="resale-requests" element={<AdminResaleRequests />} />
             <Route path="resale-products" element={<ManageResaleProducts />} />
           </Route>
