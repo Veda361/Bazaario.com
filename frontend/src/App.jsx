@@ -2,7 +2,6 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 import Navbar from "./components/Navbar";
-import TopBar from "./components/TopBar";
 import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -46,19 +45,27 @@ function App() {
 
   return (
     <>
-      <TopBar />
+      {/* ================= NAVBAR ================= */}
       <Navbar />
 
+      {/* ================= GLOBAL TOAST ================= */}
       <ToastContainer
         position="bottom-right"
         autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
         theme="dark"
       />
 
+      {/* ================= ROUTES ================= */}
       <AnimatePresence mode="wait">
         <ScrollToTop />
         <Routes location={location} key={location.pathname}>
 
+          {/* ================= PUBLIC ROUTES ================= */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -75,6 +82,7 @@ function App() {
           <Route path="/search" element={<SearchResults />} />
           <Route path="/resale" element={<ResaleProducts />} />
 
+          {/* ================= PROTECTED USER ROUTES ================= */}
           <Route
             path="/checkout"
             element={
@@ -129,6 +137,7 @@ function App() {
             }
           />
 
+          {/* ================= ADMIN ROUTES ================= */}
           <Route
             path="/admin"
             element={
@@ -138,12 +147,16 @@ function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
+
             <Route path="orders" element={<AdminManageOrders />} />
+
             <Route path="refunds" element={<AdminRefundRequests />} />
             <Route path="refund-history" element={<AdminRefundHistory />} />
+
             <Route path="add-product" element={<AddProduct />} />
             <Route path="manage-products" element={<ManageProducts />} />
             <Route path="edit-product/:id" element={<EditProduct />} />
+
             <Route path="resale-requests" element={<AdminResaleRequests />} />
             <Route path="resale-products" element={<ManageResaleProducts />} />
           </Route>
