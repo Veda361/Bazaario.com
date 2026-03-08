@@ -23,8 +23,7 @@ const Products = () => {
     setLoading(true);
 
     try {
-      let url = `/products/?category=${category}&subcategory=${subcategory}&limit=${limit}&sort_by=${sort_by}&order=${order}`;
-
+      let url = `/products?category=${category}&subcategory=${subcategory}&limit=${limit}&sort_by=${sort_by}&order=${order}`;
       if (min_price) url += `&min_price=${min_price}`;
       if (max_price) url += `&max_price=${max_price}`;
       if (in_stock) url += `&in_stock=true`;
@@ -58,7 +57,6 @@ const Products = () => {
   return (
     <PageWrapper>
       <div className="min-h-screen bg-netflixBlack px-10 py-14 text-white">
-
         <div className="border-4 border-white bg-netflixDark p-8 mb-14 shadow-[12px_12px_0px_#E50914]">
           <h1 className="text-4xl font-black uppercase">
             {subcategory} in {category}
@@ -66,13 +64,11 @@ const Products = () => {
         </div>
 
         <div className="flex flex-wrap gap-12 justify-center">
-
           {products.map((product, index) => (
             <div
               key={product.id}
               className="relative w-[300px] border-4 border-white bg-netflixDark p-6 shadow-[10px_10px_0px_#E50914] transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[14px_14px_0px_#E50914] active:translate-x-2 active:translate-y-2 active:shadow-none group"
             >
-
               {index < 3 && (
                 <div className="absolute -top-3 -right-10 rotate-45 bg-netflixRed text-white text-xs font-black px-12 py-1">
                   HOT
@@ -112,10 +108,8 @@ const Products = () => {
                   View Details
                 </button>
               </div>
-
             </div>
           ))}
-
         </div>
       </div>
     </PageWrapper>

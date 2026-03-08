@@ -7,7 +7,7 @@ from models.payment import Payment
 from dependencies.auth import get_current_user
 from models.user import User
 
-router = APIRouter(prefix="/api/profile", tags=["Profile"])
+router = APIRouter(tags=["Profile"])
 
 
 @router.get("/dashboard")

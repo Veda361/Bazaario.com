@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../api";
 import PageWrapper from "../components/PageWrapper";
-import FloatingHeroProduct from "../components/FloatingHeroProduct";
+// import FloatingHeroProduct from "../components/FloatingHeroProduct";
 import { toast } from "react-toastify";
 
 const Home = () => {
@@ -18,8 +18,13 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await apiRequest("/products/?page=1&limit=20");
-        setProducts(data.items || []);
+        const data = await apiRequest("/products?page=1&limit=20");
+
+        console.log("Products API response:", data);
+
+        const items = data?.items || data?.products || [];
+
+        setProducts(items);
 
         toast.success("Products loaded successfully 🚀", {
           position: "top-right",
@@ -59,7 +64,7 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [products]);
 
-  const activeProduct = products[activeIndex];
+  const activeProduct = products.length ? products[activeIndex] : null;
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -109,7 +114,7 @@ const Home = () => {
               {/* BACKGROUND IMAGE */}
               <img
                 key={activeProduct.id}
-                src={activeProduct.image_url}
+                src={activeProduct?.image_url || "/placeholder.png"}
                 alt={activeProduct.title}
                 className={`absolute inset-0 w-full h-full object-cover
         transition-all duration-700

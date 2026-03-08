@@ -16,9 +16,16 @@ export const AuthProvider = ({ children }) => {
         setUser(firebaseUser);
 
         try {
-          const data = await apiRequest("/api/profile/dashboard");
+          // ✅ Get Firebase token
+          const token = await firebaseUser.getIdToken();
 
-          // Backend may not always return role
+          // ✅ Send token to backend
+          const data = await apiRequest("/profile/dashboard", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
           if (data && data.role) {
             setRole(data.role);
           } else {
@@ -26,6 +33,7 @@ export const AuthProvider = ({ children }) => {
           }
 
           console.log("Profile response:", data);
+          console.log("ROLE:", data.role);
 
         } catch (err) {
           console.error("Auth API error:", err);
