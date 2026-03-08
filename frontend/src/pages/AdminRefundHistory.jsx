@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { auth } from "../firebase";
 
-const BASE_URL = "http://localhost:8000/api/payment";
+const BASE_URL = "https://bazaario-com.onrender.com/api/payment";
 
 const AdminRefundHistory = () => {
   const [history, setHistory] = useState([]);
@@ -11,21 +11,23 @@ const AdminRefundHistory = () => {
   }, []);
 
   const fetchHistory = async () => {
-    const token = await auth.currentUser.getIdToken(true);
+    try {
+      const token = await auth.currentUser.getIdToken(true);
 
-    const res = await fetch(`${BASE_URL}/admin/refund-history`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const res = await fetch(`${BASE_URL}/admin/refund-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const data = await res.json();
-    setHistory(data);
+      const data = await res.json();
+      setHistory(data || []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <div className="min-h-screen bg-netflixBlack text-white p-10">
-      <h1 className="text-4xl font-bold mb-10">
-        📜 Refund History
-      </h1>
+      <h1 className="text-4xl font-bold mb-10">📜 Refund History</h1>
 
       {history.map((r) => (
         <div

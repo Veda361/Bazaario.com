@@ -20,7 +20,7 @@ const ManageProducts = () => {
       setProducts(data.items || []);
       setTotalPages(data.total_pages || 1);
     } catch (err) {
-      console.error("Failed to fetch products:", err.message);
+      console.error(err);
     }
     setLoading(false);
   };
@@ -30,134 +30,127 @@ const ManageProducts = () => {
   }, [page]);
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this product?")) return;
 
     try {
-      await apiRequest(`/products/${id}`, {
-        method: "DELETE",
-      });
-
+      await apiRequest(`/products/${id}`, { method: "DELETE" });
       fetchProducts();
     } catch (err) {
-      console.error(err);
       alert(err.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Manage Products</h1>
+    <div className="min-h-screen bg-netflixBlack text-white p-10">
+
+      <div className="flex justify-between mb-8">
+        <h1 className="text-4xl font-black">Manage Products</h1>
 
         <button
           onClick={() => navigate("/admin/add-product")}
-          className="bg-black text-white px-4 py-2 rounded-lg"
+          className="border-4 border-white px-5 py-2 bg-netflixRed font-bold shadow-[6px_6px_0px_#000]"
         >
           + Add Product
         </button>
       </div>
 
-      {loading && <p>Loading products...</p>}
+      {loading && <p>Loading...</p>}
 
-      {!loading && products.length === 0 && (
-        <p>No products found.</p>
-      )}
+      <div className="overflow-x-auto border border-white/10 bg-netflixDark">
+        <table className="w-full text-left">
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow-md">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-200 text-gray-700">
+          <thead className="bg-white/10">
             <tr>
-              <th className="p-3 text-left">Image</th>
-              <th className="p-3 text-left">Title</th>
-              <th className="p-3 text-left">Category</th>
-              <th className="p-3 text-left">Price</th>
-              <th className="p-3 text-left">Stock</th>
-              <th className="p-3 text-left">Actions</th>
+              <th className="p-4">Image</th>
+              <th className="p-4">Title</th>
+              <th className="p-4">Category</th>
+              <th className="p-4">Price</th>
+              <th className="p-4">Stock</th>
+              <th className="p-4">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {products.map((product) => (
-              <tr key={product.id} className="border-t">
-                <td className="p-3">
-                  {product.image_url && (
+            {products.map((p) => (
+              <tr key={p.id} className="border-b border-white/10">
+
+                <td className="p-4">
+                  {p.image_url && (
                     <img
-                      src={product.image_url}
-                      alt={product.title}
-                      className="w-16 h-16 object-cover rounded"
+                      src={p.image_url}
+                      className="w-16 h-16 object-cover"
                     />
                   )}
                 </td>
 
-                <td className="p-3">{product.title}</td>
+                <td className="p-4">{p.title}</td>
 
-                <td className="p-3">
-                  {product.category}
-                  {product.subcategory && (
-                    <span className="text-gray-400 text-xs block">
-                      {product.subcategory}
-                    </span>
-                  )}
+                <td className="p-4">
+                  {p.category}
+                  <span className="block text-gray-400 text-xs">
+                    {p.subcategory}
+                  </span>
                 </td>
 
-                <td className="p-3 font-semibold">₹ {product.price}</td>
-
-                <td className="p-3">
-                  {product.stock > 0 ? (
-                    <span className="text-green-600">
-                      {product.stock}
-                    </span>
-                  ) : (
-                    <span className="text-red-600">Out of stock</span>
-                  )}
+                <td className="p-4 text-netflixRed font-bold">
+                  ₹{p.price}
                 </td>
 
-                <td className="p-3 space-x-2">
+                <td className="p-4">
+                  {p.stock > 0 ? p.stock : "Out of stock"}
+                </td>
+
+                <td className="p-4 flex gap-3">
+
                   <button
                     onClick={() =>
-                      navigate(`/admin/edit-product/${product.id}`)
+                      navigate(`/admin/edit-product/${p.id}`)
                     }
-                    className="px-3 py-1 bg-yellow-400 rounded text-black"
+                    className="bg-yellow-500 px-3 py-1"
                   >
                     Edit
                   </button>
 
                   <button
-                    onClick={() => handleDelete(product.id)}
-                    className="px-3 py-1 bg-red-500 rounded text-white"
+                    onClick={() => handleDelete(p.id)}
+                    className="bg-red-600 px-3 py-1"
                   >
                     Delete
                   </button>
+
                 </td>
+
               </tr>
             ))}
           </tbody>
+
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-4 mt-6">
+      <div className="flex justify-center gap-6 mt-8">
+
         <button
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          className="bg-white text-black px-4 py-2"
         >
           Prev
         </button>
 
         <span>
-          Page {page} of {totalPages}
+          Page {page} / {totalPages}
         </span>
 
         <button
           disabled={page === totalPages}
           onClick={() => setPage(page + 1)}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          className="bg-white text-black px-4 py-2"
         >
           Next
         </button>
+
       </div>
+
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 
-const BASE_URL = "http://localhost:8000/api";
+const BASE_URL = "https://bazaario-com.onrender.com/api";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
@@ -19,27 +19,20 @@ const OrderHistory = () => {
       const token = await auth.currentUser.getIdToken(true);
 
       // ================= FETCH ORDERS =================
-      const orderRes = await fetch(
-        `${BASE_URL}/profile/dashboard`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const orderRes = await fetch(`${BASE_URL}/profile/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const orderData = await orderRes.json();
       setOrders(orderData.orders || []);
 
       // ================= FETCH RESALE HISTORY =================
-      const resaleRes = await fetch(
-        `${BASE_URL}/resale/user/history`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const resaleRes = await fetch(`${BASE_URL}/resale/user/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const resaleData = await resaleRes.json();
       setResaleHistory(resaleData || []);
-
     } catch (err) {
       console.error("Failed to load history");
     }
@@ -51,13 +44,10 @@ const OrderHistory = () => {
 
       const token = await auth.currentUser.getIdToken(true);
 
-      const res = await fetch(
-        `${BASE_URL}/profile/order/${orderId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`${BASE_URL}/profile/order/${orderId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!res.ok) {
         const error = await res.json();
@@ -67,14 +57,11 @@ const OrderHistory = () => {
 
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === orderId
-            ? { ...order, status: "Cancelled" }
-            : order
-        )
+          order.id === orderId ? { ...order, status: "Cancelled" } : order,
+        ),
       );
 
       alert("Order cancelled successfully");
-
     } catch (err) {
       alert("Something went wrong");
     } finally {
@@ -85,11 +72,8 @@ const OrderHistory = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-10">
       <div className="max-w-5xl mx-auto">
-
         {/* ================= ORDER HISTORY ================= */}
-        <h2 className="text-3xl font-bold mb-8">
-          Order History
-        </h2>
+        <h2 className="text-3xl font-bold mb-8">Order History</h2>
 
         {orders.length === 0 ? (
           <p>No orders found.</p>
@@ -120,9 +104,7 @@ const OrderHistory = () => {
 
               <div className="flex justify-between font-bold mt-4">
                 <span>Total</span>
-                <span>
-                  ₹ {order.amount?.toLocaleString("en-IN")}
-                </span>
+                <span>₹ {order.amount?.toLocaleString("en-IN")}</span>
               </div>
 
               {order.estimated_delivery && (
@@ -169,9 +151,7 @@ const OrderHistory = () => {
             >
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    {item.title}
-                  </h3>
+                  <h3 className="font-semibold text-lg">{item.title}</h3>
                   <p className="text-sm text-gray-500">
                     Expected: ₹{item.expected_price}
                   </p>
@@ -188,8 +168,8 @@ const OrderHistory = () => {
                     item.status === "Approved"
                       ? "bg-green-100 text-green-700"
                       : item.status === "Rejected"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
                   }`}
                 >
                   {item.status}
@@ -198,7 +178,6 @@ const OrderHistory = () => {
             </div>
           ))
         )}
-
       </div>
     </div>
   );

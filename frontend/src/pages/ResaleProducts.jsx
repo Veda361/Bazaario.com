@@ -7,7 +7,7 @@ const ResaleProducts = () => {
   const auth = getAuth();
 
   const fetchProducts = async () => {
-    const res = await fetch("http://localhost:8000/api/resale/");
+    const res = await fetch("https://bazaario-com.onrender.com/api/resale/");
     const data = await res.json();
     setProducts(data);
   };
@@ -17,7 +17,7 @@ const ResaleProducts = () => {
       const token = await auth.currentUser.getIdToken();
 
       const res = await fetch(
-        "http://localhost:8000/api/payment/create-order",
+        "https://bazaario-com.onrender.com/api/payment/create-order",
         {
           method: "POST",
           headers: {
@@ -27,7 +27,7 @@ const ResaleProducts = () => {
           body: JSON.stringify({
             resale_product_id: product.id,
           }),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -69,13 +69,9 @@ const ResaleProducts = () => {
   return (
     <PageWrapper>
       <div className="min-h-screen bg-netflixBlack px-10 py-14">
-
-        <h1 className="text-4xl font-bold mb-12">
-          Refurbished & Second-Hand
-        </h1>
+        <h1 className="text-4xl font-bold mb-12">Refurbished & Second-Hand</h1>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
-
           {products.map((product) => (
             <div
               key={product.id}
@@ -92,9 +88,7 @@ const ResaleProducts = () => {
               </div>
 
               <div className="p-6">
-                <h3 className="font-semibold mb-2">
-                  {product.title}
-                </h3>
+                <h3 className="font-semibold mb-2">{product.title}</h3>
 
                 <p className="text-gray-400 text-sm mb-3">
                   Condition: {product.condition}
@@ -114,7 +108,6 @@ const ResaleProducts = () => {
               </div>
             </div>
           ))}
-
         </div>
       </div>
     </PageWrapper>

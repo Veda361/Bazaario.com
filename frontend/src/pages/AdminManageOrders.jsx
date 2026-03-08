@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { apiRequest } from "../api";
+import { auth } from "../firebase";
+
+const BASE_URL = "https://bazaario-com.onrender.com/api/payment";
 
 const SHIPPING_STATUSES = [
   "Processing",
@@ -17,29 +19,32 @@ const AdminManageOrders = () => {
   }, []);
 
   const fetchOrders = async () => {
-    try {
-      const data = await apiRequest("/payment/admin/orders");
-      setOrders(data);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load orders");
-    }
+    const token = await auth.currentUser.getIdToken(true);
+
+    const res = await fetch(`${BASE_URL}/admin/orders`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    setOrders(data || []);
   };
 
   const updateShipping = async (orderId, newStatus) => {
     try {
       setLoadingId(orderId);
 
-      await apiRequest(
-        `/payment/admin/update-shipping/${orderId}?new_status=${newStatus}`,
+      const token = await auth.currentUser.getIdToken(true);
+
+      await fetch(
+        `${BASE_URL}/admin/update-shipping/${orderId}?new_status=${newStatus}`,
         {
           method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       fetchOrders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Update failed");
     } finally {
       setLoadingId(null);
@@ -48,14 +53,11 @@ const AdminManageOrders = () => {
 
   return (
     <div className="min-h-screen bg-netflixBlack text-white p-10">
-      <h1 className="text-4xl font-black mb-10 border-b-4 border-white pb-4">
-        📦 Manage Orders
-      </h1>
+      <h1 className="text-4xl font-bold mb-10">📦 Manage Orders</h1>
 
-      <div className="overflow-x-auto border-4 border-white bg-netflixDark shadow-[8px_8px_0px_#E50914]">
+      <div className="overflow-x-auto bg-white/5 border border-white/10 rounded-2xl">
         <table className="w-full text-left">
-
-          <thead className="border-b-4 border-white">
+          <thead className="bg-white/10">
             <tr>
               <th className="p-4">ID</th>
               <th className="p-4">User</th>
@@ -68,10 +70,7 @@ const AdminManageOrders = () => {
 
           <tbody>
             {orders.map((o) => (
-              <tr
-                key={o.id}
-                className="border-b border-white/10 hover:bg-white/5 transition"
-              >
+              <tr key={o.id} className="border-b border-white/5">
                 <td className="p-4">#{o.id}</td>
                 <td className="p-4">{o.user_email}</td>
                 <td className="p-4">₹{o.amount}</td>
@@ -83,23 +82,22 @@ const AdminManageOrders = () => {
                     onChange={(e) =>
                       updateShipping(o.id, e.target.value)
                     }
-                    className="bg-black border-4 border-white px-3 py-2"
+                    className="bg-black border border-white/20 rounded-xl px-3 py-2"
                   >
-                    {SHIPPING_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
+                    {SHIPPING_STATUSES.map((s) => (
+                      <option key={s}>{s}</option>
                     ))}
                   </select>
                 </td>
 
                 <td className="p-4">
                   {loadingId === o.id && (
-                    <span className="text-netflixRed font-bold">
+                    <span className="text-netflixRed">
                       Updating...
                     </span>
                   )}
                 </td>
+
               </tr>
             ))}
           </tbody>

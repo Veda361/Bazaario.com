@@ -9,43 +9,50 @@ const ManageResaleProducts = () => {
   }, []);
 
   const fetchResale = async () => {
-    const data = await apiRequest("/admin/resale-products");
+    const data = await apiRequest("/products/admin/resale-products");
     setProducts(data || []);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-3xl font-bold mb-6">
+    <div className="min-h-screen bg-netflixBlack text-white p-10">
+
+      <h1 className="text-4xl font-bold mb-8">
         ♻️ Manage Resale Products
       </h1>
 
-      <div className="bg-white rounded-xl shadow-md p-4">
+      <div className="bg-netflixDark border border-white/10">
+
         {products.map((p) => (
           <div
             key={p.id}
-            className="border-b py-4 flex justify-between"
+            className="flex justify-between border-b border-white/10 p-5"
           >
+
             <div>
-              <p className="font-semibold">{p.title}</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-bold">{p.title}</p>
+
+              <p className="text-gray-400 text-sm">
                 Condition: {p.condition}
               </p>
-              <p className="text-yellow-600 font-bold">
-                ₹ {p.admin_price}
+
+              <p className="text-netflixRed font-bold">
+                ₹{p.admin_price}
               </p>
             </div>
 
             <span
-              className={`px-3 py-1 rounded text-sm ${
+              className={`px-3 py-1 ${
                 p.status === "Sold"
-                  ? "bg-red-500 text-white"
-                  : "bg-green-500 text-white"
+                  ? "bg-red-600"
+                  : "bg-green-600"
               }`}
             >
               {p.status}
             </span>
+
           </div>
         ))}
+
       </div>
     </div>
   );

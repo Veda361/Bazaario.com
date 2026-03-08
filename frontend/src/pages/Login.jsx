@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -38,40 +41,38 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
 
       const token = await userCredential.user.getIdToken();
 
       localStorage.setItem("authToken", token);
 
-      const response = await fetch("http://localhost:8000/protected", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Call deployed backend
+      const response = await fetch(
+        "https://bazaario-com.onrender.com/api/profile/dashboard",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (!response.ok) {
-        toast.error("Backend authentication failed ❌", {
-          position: "bottom-right",
-        });
+        toast.error("Backend authentication failed ❌");
         setLoading(false);
         return;
       }
 
       const data = await response.json();
+
       localStorage.setItem("userRole", data.role);
 
-      toast.success("Login successful 🎉", {
-        position: "bottom-right",
-      });
+      toast.success("Login successful 🎉");
 
       navigate("/");
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        err?.message?.replace("Firebase:", "") || "Login failed ❌",
-        { position: "bottom-right" }
-      );
+      toast.error(err?.message?.replace("Firebase:", "") || "Login failed ❌");
     }
 
     setLoading(false);
@@ -79,23 +80,25 @@ const Login = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-netflixBlack flex items-center justify-center px-6">
-
       {/* Background Glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] 
-                        bg-netflixRed opacity-20 blur-3xl animate-pulse"/>
+        <div
+          className="absolute -top-40 -left-40 w-[600px] h-[600px] 
+                        bg-netflixRed opacity-20 blur-3xl animate-pulse"
+        />
       </div>
 
       <div className="relative w-full max-w-md">
-
         <div className="group transform transition duration-500 hover:-translate-y-2">
-
-          <div className="border-4 border-white bg-netflixDark
+          <div
+            className="border-4 border-white bg-netflixDark
                           shadow-[14px_14px_0px_#E50914]
-                          p-10">
-
-            <h2 className="text-4xl font-black uppercase mb-8 
-                           border-b-4 border-white pb-4 tracking-wider">
+                          p-10"
+          >
+            <h2
+              className="text-4xl font-black uppercase mb-8 
+                           border-b-4 border-white pb-4 tracking-wider"
+            >
               Login
             </h2>
 
@@ -107,7 +110,6 @@ const Login = () => {
               }}
               className="space-y-6"
             >
-
               {/* EMAIL */}
               <div>
                 <label className="block text-sm mb-2 font-bold uppercase">
@@ -135,7 +137,6 @@ const Login = () => {
                 </label>
 
                 <div className="relative">
-
                   <input
                     type={showPassword ? "text" : "password"}
                     name="user_password"
@@ -156,7 +157,6 @@ const Login = () => {
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
-
                 </div>
 
                 {/* FORGOT PASSWORD BUTTON */}
@@ -187,7 +187,6 @@ const Login = () => {
               >
                 {loading ? "Signing In..." : "Login"}
               </button>
-
             </form>
 
             {/* SIGNUP LINK */}
@@ -200,11 +199,8 @@ const Login = () => {
                 Create account
               </span>
             </p>
-
           </div>
-
         </div>
-
       </div>
     </div>
   );

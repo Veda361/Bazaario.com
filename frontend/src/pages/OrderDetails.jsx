@@ -26,10 +26,10 @@ const OrderDetails = () => {
       const token = await auth.currentUser.getIdToken();
 
       const res = await fetch(
-        `http://localhost:8000/api/payment/orders/${orderId}`,
+        `https://bazaario-com.onrender.com/api/payment/orders/${orderId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (!res.ok) {
@@ -79,17 +79,13 @@ const OrderDetails = () => {
   return (
     <PageWrapper>
       <div className="min-h-screen bg-netflixBlack px-8 py-16 text-white flex justify-center">
-
         <div
           className="w-full max-w-5xl border-4 border-white
           bg-netflixDark p-10
           shadow-[20px_20px_0px_#E50914]"
         >
-
           {/* HEADER */}
-          <h2 className="text-4xl font-black mb-2">
-            ORDER #{order.id}
-          </h2>
+          <h2 className="text-4xl font-black mb-2">ORDER #{order.id}</h2>
 
           <p className="text-2xl font-bold text-netflixRed mb-6">
             ₹ {Number(order.amount).toLocaleString("en-IN")}
@@ -98,17 +94,13 @@ const OrderDetails = () => {
           {/* PAYMENT STATUS */}
           <div className="mb-3 font-semibold">
             Payment Status:
-            <span className="ml-2 text-netflixRed">
-              {order.status}
-            </span>
+            <span className="ml-2 text-netflixRed">{order.status}</span>
           </div>
 
           {/* SHIPPING STATUS */}
           <div className="mb-8 font-semibold">
             Shipping Status:
-            <span className="ml-2 text-green-400">
-              {order.shipping_status}
-            </span>
+            <span className="ml-2 text-green-400">{order.shipping_status}</span>
           </div>
 
           {/* REFUND STATUS */}
@@ -132,7 +124,6 @@ const OrderDetails = () => {
 
           {/* PROGRESS BAR */}
           <div className="mb-10">
-
             <div className="w-full bg-white/10 h-3 border-2 border-white">
               <div
                 className="bg-netflixRed h-3 transition-all duration-500"
@@ -145,9 +136,7 @@ const OrderDetails = () => {
                 <span
                   key={index}
                   className={
-                    index <= currentIndex
-                      ? "text-netflixRed"
-                      : "text-gray-400"
+                    index <= currentIndex ? "text-netflixRed" : "text-gray-400"
                   }
                 >
                   {step}
@@ -174,7 +163,6 @@ const OrderDetails = () => {
           {/* ITEMS */}
           {order.items && order.items.length > 0 && (
             <div className="mt-8">
-
               <h3 className="text-xl font-black mb-4 border-b-2 border-white pb-2">
                 ITEMS
               </h3>
@@ -193,12 +181,9 @@ const OrderDetails = () => {
                   </span>
                 </div>
               ))}
-
             </div>
           )}
-
         </div>
-
       </div>
     </PageWrapper>
   );

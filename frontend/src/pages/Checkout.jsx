@@ -5,6 +5,8 @@ import { auth } from "../firebase";
 import PageWrapper from "../components/PageWrapper";
 import { toast } from "react-toastify";
 
+const API_BASE = "https://bazaario-com.onrender.com/api/payment";
+
 const Checkout = () => {
   const { cart = [], clearCart } = useCart();
   const navigate = useNavigate();
@@ -16,42 +18,35 @@ const Checkout = () => {
 
   const handleCheckout = async () => {
     if (!auth.currentUser) {
-      toast.error("Please login first 🔐", { position: "bottom-right" });
+      toast.error("Please login first 🔐");
       return;
     }
 
     if (cart.length === 0) {
-      toast.info("Cart is empty 🛒", { position: "bottom-right" });
+      toast.info("Cart is empty 🛒");
       return;
     }
 
     try {
       const token = await auth.currentUser.getIdToken(true);
 
-      const res = await fetch(
-        "http://localhost:8000/api/payment/create-order",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            amount: Math.round(total * 100),
-            cart: cart,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/create-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: Math.round(total * 100),
+          cart,
+        }),
+      });
 
       const order = await res.json();
 
-      if (!res.ok || !order.id) {
-        toast.error("Order creation failed ❌", { position: "bottom-right" });
-        return;
-      }
-
-      if (!window.Razorpay) {
-        toast.error("Razorpay SDK not loaded 💳", { position: "bottom-right" });
+      if (!res.ok) {
+        console.error(order);
+        toast.error(order.detail || "Order creation failed ❌");
         return;
       }
 
@@ -65,72 +60,36 @@ const Checkout = () => {
 
         handler: async function (response) {
           try {
-            const verifyRes = await fetch(
-              "http://localhost:8000/api/payment/verify-payment",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              }
-            );
-
-            if (!verifyRes.ok) {
-              const errorData = await verifyRes.json();
-
-              await fetch("http://localhost:8000/api/payment/payment-failed", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: order.id,
-                  reason: errorData.detail || "Verification failed",
-                }),
-              });
-
-              toast.error("Payment verification failed ❌", {
-                position: "bottom-right",
-              });
-              return;
-            }
+            const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(response),
+            });
 
             const verifyData = await verifyRes.json();
 
-            if (verifyData.status !== true) {
-              toast.error("Unexpected verification response ❌", {
-                position: "bottom-right",
-              });
+            if (!verifyRes.ok || !verifyData.status) {
+              toast.error("Payment verification failed ❌");
               return;
             }
 
             clearCart();
-
-            toast.success("Payment Successful 🎉", {
-              position: "bottom-right",
-            });
-
+            toast.success("Payment Successful 🎉");
             navigate("/orders");
-          } catch (err) {
-            console.error("Verification error:", err);
 
-            toast.error("Payment verification error ❌", {
-              position: "bottom-right",
-            });
+          } catch (err) {
+            console.error(err);
+            toast.error("Verification error ❌");
           }
         },
 
         modal: {
-          ondismiss: async function () {
+          ondismiss: async () => {
             try {
-              await fetch("http://localhost:8000/api/payment/payment-failed", {
+              await fetch(`${API_BASE}/payment-failed`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -141,13 +100,11 @@ const Checkout = () => {
                   reason: "User closed payment popup",
                 }),
               });
-
-              toast.info("Payment cancelled", {
-                position: "bottom-right",
-              });
             } catch (err) {
-              console.error("Failed tracking error:", err);
+              console.error(err);
             }
+
+            toast.info("Payment cancelled");
           },
         },
 
@@ -161,84 +118,59 @@ const Checkout = () => {
       };
 
       const rzp = new window.Razorpay(options);
-
-      rzp.on("payment.failed", async function () {
-        toast.error("Payment Failed ❌", {
-          position: "bottom-right",
-        });
-      });
-
       rzp.open();
-    } catch (error) {
-      console.error("Checkout error:", error);
 
-      toast.error("Payment failed. Try again ❌", {
-        position: "bottom-right",
-      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Payment failed ❌");
     }
   };
 
   return (
     <PageWrapper>
-      <div className="min-h-screen bg-netflixBlack px-8 py-14">
+      <div className="min-h-screen bg-netflixBlack px-8 py-14 text-white">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12">
 
-          {/* LEFT */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-10 shadow-2xl">
+          {/* CART ITEMS */}
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-10">
             <h2 className="text-3xl font-bold mb-8">Your Items</h2>
 
-            {cart.length === 0 ? (
-              <p className="text-gray-400">Your cart is empty.</p>
-            ) : (
-              cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center border-b border-white/10 py-5"
-                >
-                  <div>
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-gray-400">
-                      Quantity: {item.quantity}
-                    </p>
-                  </div>
-
-                  <p className="font-semibold text-netflixRed">
-                    ₹{(item.price * item.quantity).toLocaleString()}
+            {cart.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between border-b border-white/10 py-4"
+              >
+                <div>
+                  <p>{item.title}</p>
+                  <p className="text-gray-400 text-sm">
+                    Qty: {item.quantity}
                   </p>
                 </div>
-              ))
-            )}
+
+                <p className="text-netflixRed font-bold">
+                  ₹{(item.price * item.quantity).toLocaleString()}
+                </p>
+              </div>
+            ))}
           </div>
 
-          {/* RIGHT */}
-          <div className="bg-gradient-to-br from-netflixDark to-black rounded-3xl p-10 border border-white/10 shadow-glow">
-            <h3 className="text-2xl font-semibold mb-8">Order Summary</h3>
+          {/* SUMMARY */}
+          <div className="bg-netflixDark p-10 rounded-3xl border border-white/10">
+            <h3 className="text-2xl mb-6">Order Summary</h3>
 
-            <div className="flex justify-between mb-4 text-gray-400">
-              <span>Total Items</span>
-              <span>{cart.length}</span>
-            </div>
-
-            <div className="flex justify-between text-2xl font-bold mb-10">
-              <span>Total Amount</span>
-              <span className="text-netflixRed">
+            <div className="flex justify-between mb-6">
+              <span>Total</span>
+              <span className="text-netflixRed text-xl">
                 ₹{total.toLocaleString()}
               </span>
             </div>
 
             <button
               onClick={handleCheckout}
-              className="w-full bg-netflixRed py-4 rounded-2xl 
-                         hover:bg-red-700 transition 
-                         font-semibold shadow-glow 
-                         text-lg tracking-wide"
+              className="w-full bg-netflixRed py-4 rounded-xl font-bold hover:bg-red-700"
             >
               Secure Payment
             </button>
-
-            <p className="text-xs text-gray-500 mt-6 text-center">
-              100% Secure payment powered by Razorpay
-            </p>
           </div>
 
         </div>
