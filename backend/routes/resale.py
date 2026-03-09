@@ -42,7 +42,7 @@ async def sell_product(
 
     try:
         new_product = ResaleProduct(
-            seller_id=current_user["uid"],
+            seller_id=current_user.id,
             title=title,
             description=description,
             category=category,
@@ -77,7 +77,7 @@ def get_user_resale_history(
 ):
     resale_items = (
         db.query(ResaleProduct)
-        .filter(ResaleProduct.seller_id == current_user["uid"])
+        .filter(ResaleProduct.seller_id == current_user.id)
         .order_by(ResaleProduct.id.desc())
         .all()
     )
