@@ -13,6 +13,9 @@ import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 
 import { motion, AnimatePresence } from "framer-motion";
+import Fuse from "fuse.js";
+
+import { apiRequest } from "../api";
 
 const Navbar = () => {
   const { role, user } = useAuth();
@@ -24,6 +27,9 @@ const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+
   const [scrolled, setScrolled] = useState(false);
 
   const navigate = useNavigate();
@@ -33,26 +39,62 @@ const Navbar = () => {
     0
   );
 
-  const normalizeText = (text) =>
-    text?.toLowerCase().trim().replace(/[^\w\s]/gi, "");
+  /* ================= FETCH PRODUCTS FOR SEARCH ================= */
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await apiRequest("/products/?page=1&limit=500");
+        setAllProducts(data.items || []);
+      } catch (err) {
+        console.error("Search preload failed", err);
+      }
+    };
 
+    fetchProducts();
+  }, []);
+
+  /* ================= FUSE SEARCH ================= */
+  const fuse = new Fuse(allProducts, {
+    keys: [
+      { name: "title", weight: 0.6 },
+      { name: "category", weight: 0.3 },
+      { name: "description", weight: 0.1 },
+    ],
+    threshold: 0.35,
+    ignoreLocation: true,
+  });
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+
+    if (!value) {
+      setSuggestions([]);
+      return;
+    }
+
+    const results = fuse.search(value).slice(0, 6);
+    setSuggestions(results.map((r) => r.item));
+  };
+
+  const handleSearch = () => {
+    if (!search.trim()) return;
+    navigate(`/search?q=${encodeURIComponent(search)}`);
+    setSuggestions([]);
+    setSearch("");
+  };
+
+  /* ================= SCROLL EFFECT ================= */
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  /* ================= LOGOUT ================= */
   const handleLogout = async () => {
     await signOut(auth);
     localStorage.clear();
     navigate("/");
-  };
-
-  const handleSearch = () => {
-    const query = normalizeText(search);
-    if (!query) return;
-    navigate(`/search?q=${encodeURIComponent(query)}`);
-    setSearch("");
   };
 
   return (
@@ -64,7 +106,6 @@ const Navbar = () => {
             : "bg-black/70"
         }`}
       >
-        {/* ================= MAIN NAVBAR ================= */}
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
 
@@ -86,7 +127,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* SEARCH */}
+            {/* ================= SEARCH ================= */}
             <div className="flex-1 mx-6 hidden md:flex relative">
               <FaSearch className="absolute left-4 top-3 text-gray-400" />
 
@@ -94,12 +135,46 @@ const Navbar = () => {
                 type="text"
                 placeholder="Search products..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 className="w-full pl-10 pr-6 py-2 rounded-2xl
                 bg-white/10 border border-white/20
                 focus:border-netflixRed focus:outline-none"
               />
+
+              {/* ================= SEARCH SUGGESTIONS ================= */}
+              {suggestions.length > 0 && (
+                <div className="absolute top-12 left-0 w-full bg-black border border-white/10 rounded-xl shadow-xl z-50">
+
+                  {suggestions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        navigate(`/product/${item.id}`);
+                        setSuggestions([]);
+                        setSearch("");
+                      }}
+                      className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-white/10"
+                    >
+                      <img
+                        src={item.image_url}
+                        className="w-10 h-10 object-contain"
+                        alt={item.title}
+                      />
+
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {item.category}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+
+                </div>
+              )}
             </div>
 
             {/* RIGHT */}
@@ -196,12 +271,12 @@ const Navbar = () => {
                   </Link>
                 </>
               )}
-            </div>
 
+            </div>
           </div>
         </div>
 
-        {/* ================= BAR BELOW NAVBAR ================= */}
+        {/* ================= NAV BAR BELOW ================= */}
 
         <div className="w-full bg-black border-t border-white/10">
           <div className="max-w-7xl mx-auto px-6 h-10 flex items-center gap-8 text-sm text-gray-300">
@@ -220,7 +295,6 @@ const Navbar = () => {
 
           </div>
         </div>
-
       </nav>
 
       {isSidebarOpen && (

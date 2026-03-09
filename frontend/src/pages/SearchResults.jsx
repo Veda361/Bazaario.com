@@ -12,14 +12,39 @@ const SearchResults = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  /* ================= NORMALIZE TEXT ================= */
+  /* ================= NORMALIZE ================= */
   const normalizeText = (text) =>
-    text
-      ?.toLowerCase()
-      .trim()
-      .replace(/[^\w\s]/gi, "");
+    text?.toLowerCase().trim().replace(/[^\w\s]/gi, "");
 
-  /* ================= HIGHLIGHT MATCH ================= */
+  /* ================= SIMPLE FUZZY MATCH ================= */
+  const fuzzyMatch = (text, keyword) => {
+    if (!text || !keyword) return false;
+
+    if (text.includes(keyword)) return true;
+
+    const words = text.split(" ");
+    return words.some((word) => word.startsWith(keyword));
+  };
+
+  /* ================= SEARCH SCORING ================= */
+  const calculateScore = (product, keyword) => {
+    let score = 0;
+
+    const title = normalizeText(product.title);
+    const description = normalizeText(product.description);
+    const category = normalizeText(product.category);
+
+    if (title.includes(keyword)) score += 50;
+    if (category.includes(keyword)) score += 30;
+    if (description.includes(keyword)) score += 10;
+
+    if (fuzzyMatch(title, keyword)) score += 20;
+    if (fuzzyMatch(category, keyword)) score += 10;
+
+    return score;
+  };
+
+  /* ================= HIGHLIGHT ================= */
   const highlightText = (text, keyword) => {
     if (!keyword) return text;
 
@@ -37,12 +62,11 @@ const SearchResults = () => {
 
       const normalizedQuery = normalizeText(queryParam);
       setQuery(normalizedQuery);
-
       setLoading(true);
 
       try {
 
-        /* ================= SESSION CACHE ================= */
+        /* ================= CACHE ================= */
         const cached = sessionStorage.getItem(`search-${normalizedQuery}`);
 
         if (cached) {
@@ -55,28 +79,31 @@ const SearchResults = () => {
         const data = await apiRequest(`/products/?search=${normalizedQuery}`);
         let items = data.items || [];
 
-        /* ================= FRONTEND FALLBACK SEARCH ================= */
+        /* ================= FALLBACK ================= */
         if (items.length === 0) {
-          const fallback = await apiRequest("/products/?page=1&limit=200");
-
+          const fallback = await apiRequest("/products/?page=1&limit=300");
           const allProducts = fallback.items || [];
 
-          items = allProducts.filter((product) => {
-            const title = normalizeText(product.title);
-            const description = normalizeText(product.description);
-            const category = normalizeText(product.category);
+          const tokens = normalizedQuery.split(" ");
 
-            return (
-              title.includes(normalizedQuery) ||
-              description.includes(normalizedQuery) ||
-              category.includes(normalizedQuery)
-            );
-          });
+          const scored = allProducts
+            .map((product) => {
+              let totalScore = 0;
+
+              tokens.forEach((token) => {
+                totalScore += calculateScore(product, token);
+              });
+
+              return { ...product, score: totalScore };
+            })
+            .filter((p) => p.score > 0)
+            .sort((a, b) => b.score - a.score);
+
+          items = scored;
         }
 
         setResults(items);
 
-        /* ================= SAVE CACHE ================= */
         sessionStorage.setItem(
           `search-${normalizedQuery}`,
           JSON.stringify(items)
@@ -100,7 +127,7 @@ const SearchResults = () => {
     <PageWrapper>
       <div className="min-h-screen bg-netflixBlack px-10 py-16">
 
-        {/* ================= HEADER ================= */}
+        {/* HEADER */}
         <div className="mb-14">
           <h2 className="text-4xl font-bold">
             Search Results
@@ -114,42 +141,18 @@ const SearchResults = () => {
           </p>
         </div>
 
-        {/* ================= LOADING ================= */}
         {loading && (
           <div className="text-center py-32 text-xl">
             Searching products...
           </div>
         )}
 
-        {/* ================= EMPTY STATE ================= */}
         {!loading && results.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-
-            <div className="bg-white/5 backdrop-blur-xl 
-                            border border-white/10 
-                            rounded-3xl px-12 py-16 shadow-xl">
-
-              <h3 className="text-2xl font-semibold mb-4">
-                No products found
-              </h3>
-
-              <p className="text-gray-400 mb-8">
-                Try searching with different keywords.
-              </p>
-
-              <Link
-                to="/"
-                className="bg-netflixRed px-8 py-3 rounded-2xl 
-                           hover:bg-red-700 transition shadow-glow"
-              >
-                Back to Home
-              </Link>
-
-            </div>
+          <div className="text-center py-32">
+            No products found
           </div>
         )}
 
-        {/* ================= RESULTS GRID ================= */}
         {!loading && results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
 
@@ -162,6 +165,7 @@ const SearchResults = () => {
                            transition-all duration-500
                            hover:scale-105 hover:shadow-glow"
               >
+
                 <div className="h-52 flex items-center justify-center mb-6">
                   {product.image_url && (
                     <img
@@ -184,6 +188,7 @@ const SearchResults = () => {
                 <p className="text-netflixRed text-2xl font-bold mt-4">
                   ₹{product.price}
                 </p>
+
               </Link>
             ))}
 
