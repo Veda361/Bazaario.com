@@ -38,7 +38,7 @@ const SellItem = () => {
         form.append("image", image);
       }
 
-      const res = await fetch("http://localhost:8000/api/resale/sell", {
+      const res = await fetch("https://bazaario-com.onrender.com/api/resale/sell", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
