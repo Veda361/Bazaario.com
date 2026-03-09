@@ -25,45 +25,62 @@ async def sell_product(
 ):
     image_url = None
 
+    # SAFE IMAGE UPLOAD
     if image:
-        upload_result = cloudinary.uploader.upload(
-            image.file,
-            folder="bazaario/resale"
+        try:
+            upload_result = cloudinary.uploader.upload(
+                image.file,
+                folder="bazaario/resale",
+                resource_type="image"
+            )
+            image_url = upload_result.get("secure_url")
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Image upload failed: {str(e)}"
+            )
+
+    try:
+        new_product = ResaleProduct(
+            seller_id=current_user["uid"],
+            title=title,
+            description=description,
+            category=category,
+            subcategory=subcategory,
+            expected_price=expected_price,
+            condition=condition,
+            image_url=image_url,
+            status="Pending",
+            is_listed=False
         )
-        image_url = upload_result.get("secure_url")
 
-    new_product = ResaleProduct(
-        seller_id=current_user["id"],
-        title=title,
-        description=description,
-        category=category,
-        subcategory=subcategory,
-        expected_price=expected_price,
-        condition=condition,
-        image_url=image_url,
-        status="Pending",
-        is_listed=False
-    )
+        db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
 
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
+        return {"message": "Sell request submitted successfully"}
 
-    return {"message": "Sell request submitted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
 
 
 # =========================================
-# USER: GET THEIR RESALE HISTORY  ✅ NEW
+# USER: GET THEIR RESALE HISTORY
 # =========================================
 @router.get("/user/history")
 def get_user_resale_history(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    resale_items = db.query(ResaleProduct)\
-        .filter(ResaleProduct.seller_id == current_user["id"])\
-        .order_by(ResaleProduct.id.desc())\
+    resale_items = (
+        db.query(ResaleProduct)
+        .filter(ResaleProduct.seller_id == current_user["uid"])
+        .order_by(ResaleProduct.id.desc())
         .all()
+    )
 
     return resale_items
 
@@ -76,9 +93,11 @@ def get_sell_requests(
     db: Session = Depends(get_db),
     current_user: dict = Depends(admin_required)
 ):
-    return db.query(ResaleProduct)\
-        .order_by(ResaleProduct.id.desc())\
+    return (
+        db.query(ResaleProduct)
+        .order_by(ResaleProduct.id.desc())
         .all()
+    )
 
 
 # =========================================
@@ -91,9 +110,11 @@ def approve_product(
     db: Session = Depends(get_db),
     current_user: dict = Depends(admin_required)
 ):
-    product = db.query(ResaleProduct)\
-        .filter(ResaleProduct.id == product_id)\
+    product = (
+        db.query(ResaleProduct)
+        .filter(ResaleProduct.id == product_id)
         .first()
+    )
 
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -116,9 +137,11 @@ def reject_product(
     db: Session = Depends(get_db),
     current_user: dict = Depends(admin_required)
 ):
-    product = db.query(ResaleProduct)\
-        .filter(ResaleProduct.id == product_id)\
+    product = (
+        db.query(ResaleProduct)
+        .filter(ResaleProduct.id == product_id)
         .first()
+    )
 
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -139,9 +162,11 @@ def get_all_resale_products(
     db: Session = Depends(get_db),
     current_user: dict = Depends(admin_required)
 ):
-    return db.query(ResaleProduct)\
-        .order_by(ResaleProduct.id.desc())\
+    return (
+        db.query(ResaleProduct)
+        .order_by(ResaleProduct.id.desc())
         .all()
+    )
 
 
 # =========================================
@@ -151,7 +176,9 @@ def get_all_resale_products(
 def get_resale_products(
     db: Session = Depends(get_db)
 ):
-    return db.query(ResaleProduct)\
-        .filter(ResaleProduct.is_listed == True)\
-        .order_by(ResaleProduct.id.desc())\
+    return (
+        db.query(ResaleProduct)
+        .filter(ResaleProduct.is_listed == True)
+        .order_by(ResaleProduct.id.desc())
         .all()
+    )

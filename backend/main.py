@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine
 from routes import products, profile, resale, reviews
 from razorpay_payment import router as razorpay_router
+import cloudinary_config
 
 app = FastAPI()
 
