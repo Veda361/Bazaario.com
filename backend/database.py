@@ -2,10 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from config import DATABASE_URL
 
-create_engine(
+engine = create_engine(
     DATABASE_URL,
     connect_args={"sslmode": "require"}
 )
+
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
